@@ -286,6 +286,14 @@ public class SettingsActivity extends Activity {
         new AlertDialog.Builder(this)
             .setTitle("Choose Icon Pack")
             .setSingleChoiceItems(names,selected,(dialog,which) -> {
+                if (which > 0) {
+                    try {
+                        getPackageManager().getPackageInfo(packages[which],0);
+                    } catch (Exception notInstalled) {
+                        Toast.makeText(this,"Install this icon pack first, then select it again",Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                }
                 prefs.edit().putString("icon_pack",packages[which]).apply();
                 dialog.dismiss();
                 Toast.makeText(this,"Icon pack saved",Toast.LENGTH_SHORT).show();
