@@ -297,6 +297,7 @@ public class SettingsActivity extends Activity {
             .setItems(names,(dialog,which) -> {
                 ThemeEngine.setTheme(this,themes[which]);
                 Toast.makeText(this,"Theme saved",Toast.LENGTH_SHORT).show();
+                recreate();
             }).show();
     }
 }
