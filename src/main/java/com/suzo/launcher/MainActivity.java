@@ -26,6 +26,7 @@ public class MainActivity extends Activity {
     boolean showDate, showLabels, clock12;
     int labelSize;
     int iconStyle;
+    int iconAppearance;
     int appPage = 0;
     int appPageCount = 1;
     String currentFilter = "";
@@ -75,6 +76,7 @@ public class MainActivity extends Activity {
         clock12 = p.getBoolean("clock_12",false);
         labelSize = p.getInt("label_size",10);
         iconStyle = p.getInt("icon_style",2);
+        iconAppearance = p.getInt("icon_appearance",0);
     }
 
     Runnable ticker = new Runnable() {
@@ -125,9 +127,20 @@ public class MainActivity extends Activity {
         if (wallpaper != null) {
             try {
                 android.net.Uri uri = android.net.Uri.parse(wallpaper);
-                android.graphics.Bitmap bitmap =
-                    android.graphics.BitmapFactory.decodeStream(
-                        getContentResolver().openInputStream(uri));
+                android.graphics.BitmapFactory.Options bounds = new android.graphics.BitmapFactory.Options();
+                bounds.inJustDecodeBounds = true;
+                java.io.InputStream first = getContentResolver().openInputStream(uri);
+                android.graphics.BitmapFactory.decodeStream(first,null,bounds);
+                if (first != null) first.close();
+                int targetW = getResources().getDisplayMetrics().widthPixels;
+                int targetH = getResources().getDisplayMetrics().heightPixels;
+                int sample = 1;
+                while (bounds.outWidth / sample > targetW * 2 || bounds.outHeight / sample > targetH * 2) sample *= 2;
+                android.graphics.BitmapFactory.Options decode = new android.graphics.BitmapFactory.Options();
+                decode.inSampleSize = sample;
+                java.io.InputStream second = getContentResolver().openInputStream(uri);
+                android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeStream(second,null,decode);
+                if (second != null) second.close();
                 if (bitmap != null) {
                     android.graphics.drawable.BitmapDrawable image =
                         new android.graphics.drawable.BitmapDrawable(
@@ -402,6 +415,7 @@ public class MainActivity extends Activity {
             try { icon.setImageDrawable(loadPackIcon(app)); } catch(Exception ignored) { icon.setImageDrawable(app.loadIcon(pm)); }
             icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
             icon.setBackgroundColor(Color.TRANSPARENT);
+            applyIconAppearance(icon);
             icon.setClipToOutline(true);
             icon.setOutlineProvider(new ViewOutlineProvider() {
                 @Override public void getOutline(View view, Outline outline) {
@@ -454,6 +468,12 @@ public class MainActivity extends Activity {
         }
     }
 
+    void applyIconAppearance(ImageView image) {
+        if (iconAppearance == 1) image.setColorFilter(Color.BLACK, android.graphics.PorterDuff.Mode.SRC_IN);
+        else if (iconAppearance == 2) image.setColorFilter(Color.WHITE, android.graphics.PorterDuff.Mode.SRC_IN);
+        else image.clearColorFilter();
+    }
+
     void dock() {
         LinearLayout dock = new LinearLayout(this);
         dock.setGravity(Gravity.CENTER);
@@ -496,6 +516,7 @@ public class MainActivity extends Activity {
             try { image.setImageDrawable(loadPackIconForPackage(pkg)); }
             catch(Exception ignored) {}
             image.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            applyIconAppearance(image);
             FrameLayout.LayoutParams ip = new FrameLayout.LayoutParams(dp(42),dp(42),Gravity.CENTER);
             cell.addView(image,ip);
             cell.setOnClickListener(v -> {
