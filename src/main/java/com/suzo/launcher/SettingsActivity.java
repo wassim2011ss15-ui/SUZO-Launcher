@@ -111,7 +111,7 @@ public class SettingsActivity extends Activity {
         });
 
         heading(page,"ABOUT");
-        TextView about = label("SUZO Launcher  •  Version 1.4",12,muted);
+        TextView about = label("SUZO Launcher  •  Version 1.5",12,muted);
         about.setPadding(dp(5),dp(15),0,dp(20));
         page.addView(about);
 
