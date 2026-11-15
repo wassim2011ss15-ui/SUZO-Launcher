@@ -547,13 +547,16 @@ public class MainActivity extends Activity {
         ArrayList<String> chosen = new ArrayList<>();
         HashSet<String> used = new HashSet<>();
 
-        String savedDock = getSharedPreferences("suzo_settings",0)
-            .getString("dock_apps","");
+        android.content.SharedPreferences dockPrefs = getSharedPreferences("suzo_settings",0);
+        HashSet<String> hiddenDock = new HashSet<>();
+        String hidden = dockPrefs.getString("dock_hidden","");
+        if (hidden.length() > 0) hiddenDock.addAll(Arrays.asList(hidden.split("\\|")));
+        String savedDock = dockPrefs.getString("dock_apps","");
         if (savedDock.length() > 0) {
             for (String pkg : savedDock.split("\\|")) {
                 if (chosen.size() >= dockCount) break;
-                if (pkg.length() > 0 && pm.getLaunchIntentForPackage(pkg) != null
-                        && !used.contains(pkg)) {
+                if (pkg.length() > 0 && !hiddenDock.contains(pkg)
+                        && pm.getLaunchIntentForPackage(pkg) != null && !used.contains(pkg)) {
                     chosen.add(pkg);
                     used.add(pkg);
                 }
@@ -563,7 +566,7 @@ public class MainActivity extends Activity {
         for (String[] candidates : preferred) {
             if (chosen.size() >= dockCount) break;
             for (String pkg : candidates) {
-                if (pm.getLaunchIntentForPackage(pkg)!=null) {
+                if (!hiddenDock.contains(pkg) && pm.getLaunchIntentForPackage(pkg)!=null) {
                     chosen.add(pkg);
                     used.add(pkg);
                     break;
@@ -574,7 +577,7 @@ public class MainActivity extends Activity {
         for (ResolveInfo a : apps) {
             String pkg = a.activityInfo.packageName;
             if (chosen.size()>=dockCount) break;
-            if (!used.contains(pkg)) {
+            if (!used.contains(pkg) && !hiddenDock.contains(pkg)) {
                 chosen.add(pkg);
                 used.add(pkg);
             }
@@ -630,6 +633,11 @@ public class MainActivity extends Activity {
         if (saved.length() > 0) items.addAll(Arrays.asList(saved.split("\\|")));
         items.remove(pkg);
         items.add(0,pkg);
+        ArrayList<String> hiddenItems = new ArrayList<>();
+        String hidden = prefs.getString("dock_hidden","");
+        if (hidden.length() > 0) hiddenItems.addAll(Arrays.asList(hidden.split("\\|")));
+        hiddenItems.remove(pkg);
+        prefs.edit().putString("dock_hidden",joinPackages(hiddenItems)).apply();
         while (items.size() > Math.max(1,dockCount)) items.remove(items.size()-1);
         StringBuilder value = new StringBuilder();
         for (String item : items) {
@@ -646,13 +654,22 @@ public class MainActivity extends Activity {
         String saved = prefs.getString("dock_apps","");
         if (saved.length() > 0) items.addAll(Arrays.asList(saved.split("\\|")));
         items.remove(pkg);
+        ArrayList<String> hiddenItems = new ArrayList<>();
+        String hidden = prefs.getString("dock_hidden","");
+        if (hidden.length() > 0) hiddenItems.addAll(Arrays.asList(hidden.split("\\|")));
+        if (!hiddenItems.contains(pkg)) hiddenItems.add(pkg);
+        prefs.edit().putString("dock_apps",joinPackages(items))
+            .putString("dock_hidden",joinPackages(hiddenItems)).apply();
+        recreate();
+    }
+
+    String joinPackages(ArrayList<String> packages) {
         StringBuilder value = new StringBuilder();
-        for (String item : items) {
+        for (String item : packages) {
             if (value.length() > 0) value.append("|");
             value.append(item);
         }
-        prefs.edit().putString("dock_apps",value.toString()).apply();
-        recreate();
+        return value.toString();
     }
 
     @Override protected void onResume() {
