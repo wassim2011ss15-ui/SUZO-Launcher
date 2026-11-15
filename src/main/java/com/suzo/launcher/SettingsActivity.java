@@ -98,6 +98,17 @@ public class SettingsActivity extends Activity {
         slider(page,"App Name Size","label_size",9,16,10,"");
         toggle(page,"Show Date","show_date",true);
 
+        heading(page,"KEYBOARD & EMOJI");
+        option(page,"Enable SUZO Keyboard","Open Android keyboard settings",() -> {
+            try { startActivity(new Intent(android.provider.Settings.ACTION_INPUT_METHOD_SETTINGS)); }
+            catch(Exception e) { startActivity(new Intent(android.provider.Settings.ACTION_SETTINGS)); }
+        });
+        option(page,"Choose Active Keyboard","Select SUZO Keyboard after enabling it",() -> {
+            android.view.inputmethod.InputMethodManager imm =
+                (android.view.inputmethod.InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
+            if (imm != null) imm.showInputMethodPicker();
+        });
+
         heading(page,"ABOUT");
         TextView about = label("SUZO Launcher  •  Version 1.3",12,muted);
         about.setPadding(dp(5),dp(15),0,dp(20));
