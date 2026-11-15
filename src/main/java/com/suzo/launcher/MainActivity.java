@@ -90,9 +90,10 @@ public class MainActivity extends Activity {
         loadTheme();
         settingsSnapshot = getSharedPreferences("suzo_settings",0)
             .getAll().toString();
-        getWindow().setStatusBarColor(Color.rgb(12,14,24));
-        getWindow().setNavigationBarColor(Color.rgb(12,14,24));
-        getWindow().getDecorView().setSystemUiVisibility(0);
+        getWindow().setStatusBarColor(ThemeEngine.background(theme));
+        getWindow().setNavigationBarColor(ThemeEngine.background(theme));
+        getWindow().getDecorView().setSystemUiVisibility(
+            theme == ThemeEngine.Theme.CLASSIC ? View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR : 0);
         createUI();
         loadApps();
         showApps("");
@@ -103,10 +104,17 @@ public class MainActivity extends Activity {
         root = vertical();
         root.setPadding(dp(19), dp(12), dp(19), dp(10));
 
-        GradientDrawable background = new GradientDrawable(
-            GradientDrawable.Orientation.TL_BR,
-            new int[]{0xFF090D19,0xFF171C35,0xFF24203E,0xFF0A1020}
-        );
+        GradientDrawable background;
+        if (theme == ThemeEngine.Theme.DARK) {
+            background = new GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                new int[]{0xFF09090C,0xFF17171D,0xFF101014});
+        } else if (theme == ThemeEngine.Theme.CLASSIC) {
+            background = new GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                new int[]{0xFFF7F7FA,0xFFE9EAF0,0xFFF2F2F7});
+        } else {
+            background = new GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                new int[]{0xFF090D19,0xFF171C35,0xFF24203E,0xFF0A1020});
+        }
         root.setBackground(background);
         String wallpaper = getSharedPreferences("suzo_settings",0)
             .getString("wallpaper_uri",null);
@@ -151,16 +159,16 @@ public class MainActivity extends Activity {
         bar.setGravity(Gravity.CENTER_VERTICAL);
 
         LinearLayout brand = vertical();
-        TextView logo = text("SUZO",22,Color.WHITE);
+        TextView logo = text("SUZO",22,fg);
         logo.setTypeface(Typeface.create("sans-serif",Typeface.BOLD));
-        TextView caption = text("DESIGNED FOR YOUR WORLD",9,0xFF9DA9C7);
+        TextView caption = text("DESIGNED FOR YOUR WORLD",9,muted);
         brand.addView(logo);
         brand.addView(caption);
         bar.addView(brand,new LinearLayout.LayoutParams(0,-2,1));
 
-        TextView settings = text("⚙",23,Color.WHITE);
+        TextView settings = text("⚙",23,fg);
         settings.setGravity(Gravity.CENTER);
-        settings.setBackground(shape(0x33FFFFFF,19,0x44FFFFFF));
+        settings.setBackground(shape(theme == ThemeEngine.Theme.CLASSIC ? 0xFFE5E5EC : 0x223FFFFFF,19,theme == ThemeEngine.Theme.CLASSIC ? 0xFFD0D0D8 : 0x44FFFFFF));
         bar.addView(settings,new LinearLayout.LayoutParams(dp(48),dp(48)));
         settings.setOnClickListener(v ->
             startActivity(new Intent(this,SettingsActivity.class)));
@@ -172,22 +180,27 @@ public class MainActivity extends Activity {
         LinearLayout card = vertical();
         card.setPadding(dp(22),dp(22),dp(22),dp(20));
 
-        GradientDrawable glass = new GradientDrawable(
-            GradientDrawable.Orientation.TL_BR,
-            new int[]{0x443E64A4,0x222B386C,0x333B2D68}
-        );
-        glass.setCornerRadius(dp(30));
-        glass.setStroke(dp(1),0x55FFFFFF);
-        card.setBackground(glass);
+        if (theme == ThemeEngine.Theme.GLASS) {
+            GradientDrawable glass = new GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                new int[]{0x443E64A4,0x222B386C,0x333B2D68});
+            glass.setCornerRadius(dp(30));
+            glass.setStroke(dp(1),0x55FFFFFF);
+            card.setBackground(glass);
+        } else {
+            GradientDrawable panel = ThemeEngine.panel(theme);
+            panel.setCornerRadius(dp(30));
+            panel.setStroke(dp(1), theme == ThemeEngine.Theme.CLASSIC ? 0xFFE0E0E8 : 0xFF44444C);
+            card.setBackground(panel);
+        }
 
-        TextView eyebrow = text("GOOD TO SEE YOU",10,0xFFB9C7E9);
+        TextView eyebrow = text("GOOD TO SEE YOU",10,muted);
         eyebrow.setLetterSpacing(.15f);
-        clock = text("--:--",clockSize,Color.WHITE);
+        clock = text("--:--",clockSize,fg);
         clock.setTypeface(Typeface.create("sans-serif-light",Typeface.NORMAL));
-        date = text("",13,0xFFD1D9EF);
+        date = text("",13,muted);
         date.setVisibility(showDate ? View.VISIBLE : View.GONE);
 
-        TextView line = text("✦  YOUR SPACE. YOUR MOMENT.",10,0xFFB9A8FF);
+        TextView line = text("✦  YOUR SPACE. YOUR MOMENT.",10,theme == ThemeEngine.Theme.CLASSIC ? 0xFF6654B5 : 0xFFB9A8FF);
         line.setPadding(0,dp(17),0,0);
 
         card.addView(eyebrow);
@@ -204,7 +217,7 @@ public class MainActivity extends Activity {
         LinearLayout box = new LinearLayout(this);
         box.setGravity(Gravity.CENTER_VERTICAL);
         box.setPadding(dp(15),0,dp(14),0);
-        box.setBackground(shape(0x22FFFFFF,20,0x33FFFFFF));
+        box.setBackground(shape(theme == ThemeEngine.Theme.CLASSIC ? 0xFFFFFFFF : 0x22FFFFFF,20,theme == ThemeEngine.Theme.CLASSIC ? 0xFFD9D9E2 : 0x33FFFFFF));
 
         TextView icon = text("⌕",27,0xFFB8C3DD);
         box.addView(icon);
@@ -212,8 +225,8 @@ public class MainActivity extends Activity {
         searchInput = new EditText(this);
         searchInput.setSingleLine(true);
         searchInput.setTextSize(14);
-        searchInput.setTextColor(Color.WHITE);
-        searchInput.setHintTextColor(0xFF9CA8C3);
+        searchInput.setTextColor(fg);
+        searchInput.setHintTextColor(muted);
         searchInput.setHint("Search applications");
         searchInput.setBackgroundColor(Color.TRANSPARENT);
         searchInput.setPadding(dp(10),dp(15),0,dp(15));
@@ -236,7 +249,7 @@ public class MainActivity extends Activity {
         LinearLayout header = new LinearLayout(this);
         header.setGravity(Gravity.CENTER_VERTICAL);
 
-        TextView title = text("Your Applications",19,Color.WHITE);
+        TextView title = text("Your Applications",19,fg);
         title.setTypeface(null,Typeface.BOLD);
         TextView all = text("APP LIBRARY",9,0xFFB7A8FF);
         header.addView(title,new LinearLayout.LayoutParams(0,-2,1));
@@ -296,7 +309,7 @@ public class MainActivity extends Activity {
                         if (id == 0) id = r.getIdentifier(drawable,"mipmap",pack);
 
                         if (id != 0) {
-                            parser = null;
+                            ((android.content.res.XmlResourceParser)parser).close();
                             return pc.getResources().getDrawable(id,pc.getTheme());
                         }
                     }
@@ -348,18 +361,29 @@ public class MainActivity extends Activity {
             item.setPadding(dp(2),dp(5),dp(2),dp(5));
 
             FrameLayout iconBox = new FrameLayout(this);
-            int radius = iconStyle == 0 ? 8 :
-                         iconStyle == 1 ? 50 : 16;
             iconBox.setBackgroundColor(Color.TRANSPARENT);
             ImageView icon = new ImageView(this);
             try { icon.setImageDrawable(loadPackIcon(app)); } catch(Exception ignored) { icon.setImageDrawable(app.loadIcon(pm)); }
             icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
             icon.setBackgroundColor(Color.TRANSPARENT);
+            icon.setClipToOutline(true);
+            icon.setOutlineProvider(new ViewOutlineProvider() {
+                @Override public void getOutline(View view, Outline outline) {
+                    int w = view.getWidth();
+                    int h = view.getHeight();
+                    if (w <= 0 || h <= 0) return;
+                    if (iconStyle == 1) outline.setOval(0,0,w,h);
+                    else {
+                        float r = dp(iconStyle == 0 ? 8 : 16);
+                        outline.setRoundRect(0,0,w,h,Math.min(r,Math.min(w,h)/2f));
+                    }
+                }
+            });
             FrameLayout.LayoutParams ip = new FrameLayout.LayoutParams(dp(iconSize),dp(iconSize),Gravity.CENTER);
             iconBox.addView(icon,ip);
             item.addView(iconBox,new LinearLayout.LayoutParams(dp(iconSize),dp(iconSize)));
 
-            TextView label = text(app.loadLabel(pm).toString(),labelSize,0xFFE7EAF4);
+            TextView label = text(app.loadLabel(pm).toString(),labelSize,fg);
             label.setGravity(Gravity.CENTER);
             label.setMaxLines(1);
             label.setEllipsize(android.text.TextUtils.TruncateAt.END);
@@ -397,7 +421,7 @@ public class MainActivity extends Activity {
         LinearLayout dock = new LinearLayout(this);
         dock.setGravity(Gravity.CENTER);
         dock.setPadding(dp(10),dp(10),dp(10),dp(10));
-        dock.setBackground(shape(0x553D4564,27,0x55FFFFFF));
+        dock.setBackground(shape(theme == ThemeEngine.Theme.CLASSIC ? 0xFFE4E5EC : theme == ThemeEngine.Theme.DARK ? 0xFF24242B : 0x553D4564,27,theme == ThemeEngine.Theme.CLASSIC ? 0xFFD3D4DC : 0x55FFFFFF));
 
         String[][] preferred = {
             {"com.google.android.dialer","com.android.dialer"},
@@ -410,6 +434,7 @@ public class MainActivity extends Activity {
         HashSet<String> used = new HashSet<>();
 
         for (String[] candidates : preferred) {
+            if (chosen.size() >= dockCount) break;
             for (String pkg : candidates) {
                 if (pm.getLaunchIntentForPackage(pkg)!=null) {
                     chosen.add(pkg);
