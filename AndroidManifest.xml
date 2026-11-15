@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.suzo.launcher" android:versionCode="5" android:versionName="1.3">
+    package="com.suzo.launcher" android:versionCode="6" android:versionName="1.4">
 
     <uses-permission
         android:name="android.permission.QUERY_ALL_PACKAGES"/>
@@ -13,6 +13,8 @@
     <application
         android:theme="@android:style/Theme.Material.Light.NoActionBar"
         android:label="SUZO Launcher"
+        android:icon="@drawable/suzo_icon"
+        android:roundIcon="@drawable/suzo_icon"
         android:allowBackup="false"
         android:supportsRtl="true">
 
