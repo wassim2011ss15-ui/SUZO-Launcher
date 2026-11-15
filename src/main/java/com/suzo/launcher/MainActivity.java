@@ -31,6 +31,8 @@ public class MainActivity extends Activity {
     int appPageCount = 1;
     String currentFilter = "";
     TextView pageIndicator;
+    LinearLayout categoryBar;
+    int selectedCategory = -1;
     String settingsSnapshot;
     ArrayList<ResolveInfo> apps = new ArrayList<>();
 
@@ -299,9 +301,59 @@ public class MainActivity extends Activity {
         header.addView(pages);
         content.addView(header);
 
+        HorizontalScrollView categoryScroll = new HorizontalScrollView(this);
+        categoryScroll.setHorizontalScrollBarEnabled(false);
+        categoryBar = new LinearLayout(this);
+        categoryBar.setGravity(Gravity.CENTER_VERTICAL);
+        categoryScroll.addView(categoryBar);
+        LinearLayout.LayoutParams categoryParams = new LinearLayout.LayoutParams(-1,-2);
+        categoryParams.setMargins(0,dp(10),0,dp(8));
+        content.addView(categoryScroll,categoryParams);
+        renderCategoryBar();
+
         appsGrid = vertical();
         appsGrid.setPadding(0,dp(8),0,dp(15));
         content.addView(appsGrid);
+    }
+
+    void renderCategoryBar() {
+        if (categoryBar == null) return;
+        categoryBar.removeAllViews();
+        String[] names = {"All","Games","Social","Photos","Video","Music","Productivity"};
+        int[] values = {-1,
+            android.content.pm.ApplicationInfo.CATEGORY_GAME,
+            android.content.pm.ApplicationInfo.CATEGORY_SOCIAL,
+            android.content.pm.ApplicationInfo.CATEGORY_IMAGE,
+            android.content.pm.ApplicationInfo.CATEGORY_VIDEO,
+            android.content.pm.ApplicationInfo.CATEGORY_AUDIO,
+            android.content.pm.ApplicationInfo.CATEGORY_PRODUCTIVITY
+        };
+        for (int i=0;i<names.length;i++) {
+            final int value = values[i];
+            boolean active = selectedCategory == value;
+            TextView chip = text(names[i],12,active ? Color.WHITE : fg);
+            chip.setGravity(Gravity.CENTER);
+            chip.setPadding(dp(15),dp(9),dp(15),dp(9));
+            chip.setBackground(shape(active
+                ? (theme == ThemeEngine.Theme.CLASSIC ? 0xFF6654B5 : 0xFF6654B5)
+                : (theme == ThemeEngine.Theme.CLASSIC ? 0xFFE7E7EF : 0x22FFFFFF),
+                18, active ? 0xFF6654B5 : (theme == ThemeEngine.Theme.CLASSIC ? 0xFFDADAE3 : 0x33FFFFFF)));
+            LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-2,-2);
+            p.setMargins(0,0,dp(8),0);
+            categoryBar.addView(chip,p);
+            chip.setOnClickListener(v -> {
+                selectedCategory = value;
+                renderCategoryBar();
+                appPage = 0;
+                showApps(currentFilter);
+            });
+        }
+    }
+
+    boolean categoryMatches(ResolveInfo app) {
+        if (selectedCategory < 0) return true;
+        if (android.os.Build.VERSION.SDK_INT < 26) return false;
+        return app.activityInfo.applicationInfo.category == selectedCategory;
     }
 
     void loadApps() {
@@ -383,7 +435,8 @@ public class MainActivity extends Activity {
         ArrayList<ResolveInfo> visible = new ArrayList<>();
         for (ResolveInfo a : apps) {
             String name = a.loadLabel(pm).toString();
-            if (name.toLowerCase(Locale.ROOT).contains(filter.toLowerCase(Locale.ROOT)))
+            if (name.toLowerCase(Locale.ROOT).contains(filter.toLowerCase(Locale.ROOT))
+                    && categoryMatches(a))
                 visible.add(a);
         }
 
