@@ -25,13 +25,29 @@ fi
 
 ANDROID_JAR="$(find "$SDK_ROOT" -type f -name android.jar -print -quit)"
 D8_JAR="$(find "$SDK_ROOT" -type f -name d8.jar -print -quit)"
-APKSIGNER="$(find "$SDK_ROOT" -type f -name apksigner -print -quit)"
-AAPT2="$(find "$SDK_ROOT" -type f -name aapt2 -print -quit)"
+APKSIGNER=""
+# Prefer the Termux wrapper if available; SDK apksigner may also be usable.
+if command -v apksigner >/dev/null 2>&1; then
+    APKSIGNER="$(command -v apksigner)"
+else
+    APKSIGNER="$(find "$SDK_ROOT" -type f -name apksigner -print -quit)"
+fi
+AAPT2=""
+# Google SDK aapt2 is commonly x86_64 and cannot run on ARM64 Termux.
+# Prefer Termux native aapt2 when installed.
+if [ -n "${PREFIX:-}" ] && [ -x "$PREFIX/bin/aapt2" ]; then
+    AAPT2="$PREFIX/bin/aapt2"
+elif command -v aapt2 >/dev/null 2>&1; then
+    AAPT2="$(command -v aapt2)"
+else
+    AAPT2="$(find "$SDK_ROOT" -type f -name aapt2 -print -quit)"
+fi
 
 for tool in ANDROID_JAR D8_JAR APKSIGNER AAPT2; do
     if [ -z "${!tool}" ]; then
         echo "ERROR: $tool not found under $SDK_ROOT"
-        echo "Check sdk-check/platform.zip and build-tools.zip, then run this script again."
+        echo "Install missing Termux tools with: pkg install aapt2 apksigner"
+        echo "Then run this script again."
         exit 1
     fi
 done
@@ -43,6 +59,14 @@ fi
 : "${SUZO_STORE_PASS:?Signing password missing in local build/signing.env}"
 : "${SUZO_KEY_PASS:?Key password missing in local build/signing.env}"
 
+if ! "$AAPT2" version >/dev/null 2>&1; then
+    echo "ERROR: aapt2 at $AAPT2 is not executable on this Termux device."
+    echo "Run: pkg install aapt2 apksigner"
+    exit 1
+fi
+
+ echo "Using native AAPT2: $AAPT2"
+echo "Using apksigner: $APKSIGNER"
 echo "=== SUZO BUILD START ==="
 rm -rf build/classes build/dex build/compiled-res.zip
 mkdir -p build/classes build/dex
