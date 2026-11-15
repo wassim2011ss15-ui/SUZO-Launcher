@@ -566,7 +566,8 @@ public class MainActivity extends Activity {
         for (String[] candidates : preferred) {
             if (chosen.size() >= dockCount) break;
             for (String pkg : candidates) {
-                if (!hiddenDock.contains(pkg) && pm.getLaunchIntentForPackage(pkg)!=null) {
+                if (!hiddenDock.contains(pkg) && !used.contains(pkg)
+                        && pm.getLaunchIntentForPackage(pkg)!=null) {
                     chosen.add(pkg);
                     used.add(pkg);
                     break;
