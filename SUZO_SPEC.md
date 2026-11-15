@@ -1,12 +1,12 @@
 # SUZO LAUNCHER — ULTIMATE EDITION
-Version: 1.4
+Version: 1.5
 Brand: SUZO
 Slogan: Feel the Speed.
 
 ## Implemented in the current source
 - iOS-inspired interface with Liquid Dark, Liquid Glass and Classic themes.
 - Live clock and date display with configurable size and format.
-- Searchable application library with page navigation.
+- Searchable application library with page navigation and category filters for games, social, photos, video, music and productivity.
 - Four-icon dock with configurable icon count.
 - Customizable grid columns, icon size, shape, labels and label size.
 - Original, dark monochrome and white monochrome icon appearance.
