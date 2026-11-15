@@ -50,7 +50,7 @@ mkdir -p build/classes build/dex
 find src/main/java -name "*.java" > build/sources.txt
 javac -source 8 -target 8 -classpath "$ANDROID_JAR" -d build/classes @build/sources.txt
 
-java -cp "$(dirname "$D8_JAR")" com.android.tools.r8.D8 \
+java -cp "$D8_JAR" com.android.tools.r8.D8 \
     --lib "$ANDROID_JAR" --min-api 23 --output build/dex \
     $(find build/classes -name "*.class")
 
