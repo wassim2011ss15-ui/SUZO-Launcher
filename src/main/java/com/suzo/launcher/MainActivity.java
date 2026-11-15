@@ -500,6 +500,10 @@ public class MainActivity extends Activity {
                     if (launch != null) startActivity(launch);
                 } catch(Exception ignored) {}
             });
+            item.setOnLongClickListener(v -> {
+                showAppOptions(app);
+                return true;
+            });
 
             item.setOnTouchListener((v,e) -> {
                 if (e.getAction()==MotionEvent.ACTION_DOWN)
@@ -543,6 +547,19 @@ public class MainActivity extends Activity {
         ArrayList<String> chosen = new ArrayList<>();
         HashSet<String> used = new HashSet<>();
 
+        String savedDock = getSharedPreferences("suzo_settings",0)
+            .getString("dock_apps","");
+        if (savedDock.length() > 0) {
+            for (String pkg : savedDock.split("\\|")) {
+                if (chosen.size() >= dockCount) break;
+                if (pkg.length() > 0 && pm.getLaunchIntentForPackage(pkg) != null
+                        && !used.contains(pkg)) {
+                    chosen.add(pkg);
+                    used.add(pkg);
+                }
+            }
+        }
+
         for (String[] candidates : preferred) {
             if (chosen.size() >= dockCount) break;
             for (String pkg : candidates) {
@@ -576,12 +593,66 @@ public class MainActivity extends Activity {
                 Intent launch = pm.getLaunchIntentForPackage(pkg);
                 if (launch!=null) startActivity(launch);
             });
+            cell.setOnLongClickListener(v -> {
+                removeFromDock(pkg);
+                return true;
+            });
             dock.addView(cell,new LinearLayout.LayoutParams(0,dp(50),1));
         }
 
         LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1,-2);
         p.setMargins(0,dp(12),0,dp(4));
         root.addView(dock,p);
+    }
+
+    void showAppOptions(ResolveInfo app) {
+        String pkg = app.activityInfo.packageName;
+        String name = app.loadLabel(pm).toString();
+        String[] actions = {"Add to dock","App info"};
+        new AlertDialog.Builder(this)
+            .setTitle(name)
+            .setItems(actions,(dialog,which) -> {
+                if (which == 0) addToDock(pkg);
+                else if (which == 1) {
+                    try {
+                        Intent info = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                        info.setData(android.net.Uri.parse("package:" + pkg));
+                        startActivity(info);
+                    } catch(Exception ignored) {}
+                }
+            }).show();
+    }
+
+    void addToDock(String pkg) {
+        android.content.SharedPreferences prefs = getSharedPreferences("suzo_settings",0);
+        ArrayList<String> items = new ArrayList<>();
+        String saved = prefs.getString("dock_apps","");
+        if (saved.length() > 0) items.addAll(Arrays.asList(saved.split("\\|")));
+        items.remove(pkg);
+        items.add(0,pkg);
+        while (items.size() > Math.max(1,dockCount)) items.remove(items.size()-1);
+        StringBuilder value = new StringBuilder();
+        for (String item : items) {
+            if (value.length() > 0) value.append("|");
+            value.append(item);
+        }
+        prefs.edit().putString("dock_apps",value.toString()).apply();
+        recreate();
+    }
+
+    void removeFromDock(String pkg) {
+        android.content.SharedPreferences prefs = getSharedPreferences("suzo_settings",0);
+        ArrayList<String> items = new ArrayList<>();
+        String saved = prefs.getString("dock_apps","");
+        if (saved.length() > 0) items.addAll(Arrays.asList(saved.split("\\|")));
+        items.remove(pkg);
+        StringBuilder value = new StringBuilder();
+        for (String item : items) {
+            if (value.length() > 0) value.append("|");
+            value.append(item);
+        }
+        prefs.edit().putString("dock_apps",value.toString()).apply();
+        recreate();
     }
 
     @Override protected void onResume() {
