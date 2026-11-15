@@ -1,0 +1,36 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.suzo.launcher" android:versionCode="5" android:versionName="1.3">
+
+    <uses-permission
+        android:name="android.permission.QUERY_ALL_PACKAGES"/>
+
+        <queries>
+        <package android:name="com.eatos.iliquid.dark"/>
+        <package android:name="com.eatos.idarkos"/>
+        <package android:name="com.eatos.iliquidos.glass"/>
+        <package android:name="com.launcher.ios27.liquid.glass"/>
+    </queries>
+    <application
+        android:theme="@android:style/Theme.Material.Light.NoActionBar"
+        android:label="SUZO Launcher"
+        android:allowBackup="false"
+        android:supportsRtl="true">
+
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="false"/>
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.HOME"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+
+        </activity>
+    </application>
+</manifest>

@@ -1,0 +1,10 @@
+android-sdk/
+build/
+build-tools.zip
+*.keystore
+*.jks
+.env
+local.properties
+*.apk
+*.dex
+sdk-check/
