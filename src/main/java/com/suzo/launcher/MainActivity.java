@@ -26,6 +26,10 @@ public class MainActivity extends Activity {
     boolean showDate, showLabels, clock12;
     int labelSize;
     int iconStyle;
+    int appPage = 0;
+    int appPageCount = 1;
+    String currentFilter = "";
+    TextView pageIndicator;
     String settingsSnapshot;
     ArrayList<ResolveInfo> apps = new ArrayList<>();
 
@@ -247,6 +251,7 @@ public class MainActivity extends Activity {
         searchInput.addTextChangedListener(new TextWatcher() {
             public void beforeTextChanged(CharSequence s,int a,int c,int f) {}
             public void onTextChanged(CharSequence s,int a,int before,int count) {
+                appPage = 0;
                 showApps(s.toString());
             }
             public void afterTextChanged(Editable e) {}
@@ -259,9 +264,26 @@ public class MainActivity extends Activity {
 
         TextView title = text("Your Applications",19,fg);
         title.setTypeface(null,Typeface.BOLD);
-        TextView all = text("APP LIBRARY",9,0xFFB7A8FF);
         header.addView(title,new LinearLayout.LayoutParams(0,-2,1));
-        header.addView(all);
+        LinearLayout pages = new LinearLayout(this);
+        pages.setGravity(Gravity.CENTER);
+        TextView previous = text("‹",24,fg);
+        pageIndicator = text("1 / 1",10,muted);
+        TextView next = text("›",24,fg);
+        previous.setGravity(Gravity.CENTER);
+        next.setGravity(Gravity.CENTER);
+        previous.setPadding(dp(8),0,dp(8),0);
+        next.setPadding(dp(8),0,dp(8),0);
+        pages.addView(previous);
+        pages.addView(pageIndicator);
+        pages.addView(next);
+        previous.setOnClickListener(v -> {
+            if (appPage > 0) { appPage--; showApps(currentFilter); }
+        });
+        next.setOnClickListener(v -> {
+            if (appPage + 1 < appPageCount) { appPage++; showApps(currentFilter); }
+        });
+        header.addView(pages);
         content.addView(header);
 
         appsGrid = vertical();
@@ -342,6 +364,7 @@ public class MainActivity extends Activity {
 
     void showApps(String filter) {
         if (appsGrid == null) return;
+        currentFilter = filter == null ? "" : filter;
         appsGrid.removeAllViews();
 
         ArrayList<ResolveInfo> visible = new ArrayList<>();
@@ -351,13 +374,18 @@ public class MainActivity extends Activity {
                 visible.add(a);
         }
 
-        int width = getResources().getDisplayMetrics().widthPixels;
-        int widthDp = (int)(width/getResources().getDisplayMetrics().density);
-        int columns = gridColumns;
+        int columns = Math.max(3, Math.min(5, gridColumns));
+        int pageSize = columns * 4;
+        appPageCount = Math.max(1, (int)Math.ceil(visible.size() / (double)pageSize));
+        appPage = Math.max(0, Math.min(appPage, appPageCount - 1));
+        if (pageIndicator != null)
+            pageIndicator.setText((appPage + 1) + " / " + appPageCount);
+        int start = appPage * pageSize;
+        int end = Math.min(visible.size(), start + pageSize);
         LinearLayout row = null;
 
-        for (int i=0;i<visible.size();i++) {
-            if (i%columns==0) {
+        for (int i=start;i<end;i++) {
+            if ((i-start)%columns==0) {
                 row = new LinearLayout(this);
                 row.setGravity(Gravity.CENTER);
                 appsGrid.addView(row,new LinearLayout.LayoutParams(-1,-2));
@@ -419,6 +447,7 @@ public class MainActivity extends Activity {
         }
 
         if (visible.isEmpty()) {
+            if (pageIndicator != null) pageIndicator.setText("1 / 1");
             TextView empty = text("No applications found",13,muted);
             empty.setGravity(Gravity.CENTER);
             appsGrid.addView(empty);
