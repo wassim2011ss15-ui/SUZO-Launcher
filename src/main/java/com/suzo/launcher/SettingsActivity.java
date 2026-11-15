@@ -84,6 +84,7 @@ public class SettingsActivity extends Activity {
         heading(page,"HOME SCREEN");
         slider(page,"Icon Size","icon_size",35,65,43," px");
         option(page,"Icon Shape","Choose icon corners",() -> chooseIcons());
+        option(page,"Icon Color","Original • Dark • White monochrome",() -> chooseIconAppearance());
         option(page,"Icon Pack","Dark • Glass • iOS 27",() -> chooseIconPack());
         slider(page,"Grid Columns","columns",3,5,4,"");
         toggle(page,"Show App Names","show_labels",true);
@@ -246,6 +247,18 @@ public class SettingsActivity extends Activity {
         }
     }
 
+
+    void chooseIconAppearance() {
+        String[] names = {"Original App Colors","Dark Monochrome","White Monochrome"};
+        int current = prefs.getInt("icon_appearance",0);
+        new AlertDialog.Builder(this)
+            .setTitle("Icon Color")
+            .setSingleChoiceItems(names,current,(dialog,which) -> {
+                prefs.edit().putInt("icon_appearance",which).apply();
+                dialog.dismiss();
+                Toast.makeText(this,"Icon color saved",Toast.LENGTH_SHORT).show();
+            }).setNegativeButton("Cancel",null).show();
+    }
 
     void chooseIconPack() {
         String[] names = {
