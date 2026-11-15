@@ -166,6 +166,14 @@ public class MainActivity extends Activity {
         brand.addView(caption);
         bar.addView(brand,new LinearLayout.LayoutParams(0,-2,1));
 
+        TextView control = text("☷",22,fg);
+        control.setGravity(Gravity.CENTER);
+        control.setBackground(shape(theme == ThemeEngine.Theme.CLASSIC ? 0xFFE5E5EC : 0x223FFFFFF,19,theme == ThemeEngine.Theme.CLASSIC ? 0xFFD0D0D8 : 0x44FFFFFF));
+        LinearLayout.LayoutParams cp = new LinearLayout.LayoutParams(dp(44),dp(44));
+        cp.setMargins(0,0,dp(8),0);
+        bar.addView(control,cp);
+        control.setOnClickListener(v -> QuickPanel.show(this));
+
         TextView settings = text("⚙",23,fg);
         settings.setGravity(Gravity.CENTER);
         settings.setBackground(shape(theme == ThemeEngine.Theme.CLASSIC ? 0xFFE5E5EC : 0x223FFFFFF,19,theme == ThemeEngine.Theme.CLASSIC ? 0xFFD0D0D8 : 0x44FFFFFF));
