@@ -20,6 +20,19 @@
             android:name=".SettingsActivity"
             android:exported="false"/>
 
+        <service
+            android:name=".SuzoKeyboardService"
+            android:label="SUZO Keyboard"
+            android:permission="android.permission.BIND_INPUT_METHOD"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.view.InputMethod" />
+            </intent-filter>
+            <meta-data
+                android:name="android.view.im"
+                android:resource="@xml/suzo_input_method" />
+        </service>
+
         <activity
             android:name=".MainActivity"
             android:exported="true">
