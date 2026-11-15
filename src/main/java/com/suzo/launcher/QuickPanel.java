@@ -51,7 +51,7 @@ public final class QuickPanel {
         int fg = ThemeEngine.foreground(theme);
         int muted = ThemeEngine.secondary(theme);
         int surface = light ? 0xFFF9F9FC : theme == ThemeEngine.Theme.DARK ? 0xFF25252C : 0xFF26304D;
-        int stroke = light ? 0xFFE0E0E8 : 0x554FFFFFFF;
+        int stroke = light ? 0xFFE0E0E8 : 0x55FFFFFF;
 
         LinearLayout page = new LinearLayout(activity);
         page.setOrientation(LinearLayout.VERTICAL);
