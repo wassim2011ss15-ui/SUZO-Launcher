@@ -17,6 +17,7 @@ public class SettingsActivity extends Activity {
     SharedPreferences prefs;
     int white = Color.WHITE;
     int muted = 0xFFADB8D0;
+    ThemeEngine.Theme activeTheme = ThemeEngine.Theme.GLASS;
 
     int dp(float n) {
         return (int)(n * getResources().getDisplayMetrics().density + .5f);
@@ -32,9 +33,17 @@ public class SettingsActivity extends Activity {
 
     GradientDrawable panel() {
         GradientDrawable d = new GradientDrawable();
-        d.setColor(0xFF202941);
+        if (activeTheme == ThemeEngine.Theme.CLASSIC) {
+            d.setColor(0xFFF9F9FC);
+            d.setStroke(dp(1),0xFFE0E0E8);
+        } else if (activeTheme == ThemeEngine.Theme.DARK) {
+            d.setColor(0xFF25252C);
+            d.setStroke(dp(1),0xFF44444C);
+        } else {
+            d.setColor(0xFF202941);
+            d.setStroke(dp(1),0x44FFFFFF);
+        }
         d.setCornerRadius(dp(22));
-        d.setStroke(dp(1),0x44FFFFFF);
         return d;
     }
 
@@ -42,14 +51,20 @@ public class SettingsActivity extends Activity {
     public void onCreate(Bundle b) {
         super.onCreate(b);
         prefs = getSharedPreferences("suzo_settings",0);
+        activeTheme = ThemeEngine.getTheme(this);
+        white = ThemeEngine.foreground(activeTheme);
+        muted = ThemeEngine.secondary(activeTheme);
 
-        getWindow().setStatusBarColor(0xFF10172A);
-        getWindow().setNavigationBarColor(0xFF10172A);
+        int pageBackground = ThemeEngine.background(activeTheme);
+        getWindow().setStatusBarColor(pageBackground);
+        getWindow().setNavigationBarColor(pageBackground);
+        getWindow().getDecorView().setSystemUiVisibility(
+            activeTheme == ThemeEngine.Theme.CLASSIC ? View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR : 0);
 
         root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(20),dp(20),dp(20),dp(20));
-        root.setBackgroundColor(0xFF10172A);
+        root.setBackgroundColor(pageBackground);
 
         ScrollView scroll = new ScrollView(this);
         LinearLayout page = new LinearLayout(this);
@@ -104,7 +119,7 @@ public class SettingsActivity extends Activity {
     }
 
     void heading(LinearLayout parent,String value) {
-        TextView t = label(value,11,0xFFB8A9FF);
+        TextView t = label(value,11,activeTheme == ThemeEngine.Theme.CLASSIC ? 0xFF6654B5 : 0xFFB8A9FF);
         t.setTypeface(null,Typeface.BOLD);
         t.setPadding(dp(5),dp(22),0,dp(10));
         parent.addView(t);
@@ -136,7 +151,7 @@ public class SettingsActivity extends Activity {
         box.setBackground(panel());
 
         TextView name = label(title,14,white);
-        TextView value = label("",12,0xFFB8A9FF);
+        TextView value = label("",12,activeTheme == ThemeEngine.Theme.CLASSIC ? 0xFF6654B5 : 0xFFB8A9FF);
         SeekBar seek = new SeekBar(this);
         seek.setMax(max-min);
         seek.setProgress(prefs.getInt(key,def)-min);
