@@ -15,7 +15,7 @@ import com.suzo.launcher.themes.ThemeEngine;
 import org.xmlpull.v1.XmlPullParser;
 
 public class MainActivity extends Activity {
-    LinearLayout root, content, appsGrid;
+    LinearLayout root, content, appsGrid, recentAppsRow;
     EditText searchInput;
     TextView clock, date;
     Handler handler = new Handler();
@@ -104,6 +104,7 @@ public class MainActivity extends Activity {
             theme == ThemeEngine.Theme.CLASSIC ? View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR : 0);
         createUI();
         loadApps();
+        renderRecentApps();
         showApps("");
         handler.post(ticker);
     }
@@ -160,6 +161,7 @@ public class MainActivity extends Activity {
         content = vertical();
         topBar();
         hero();
+        recentSection();
         search();
         section();
         scroll.addView(content);
@@ -238,6 +240,124 @@ public class MainActivity extends Activity {
         LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1,-2);
         p.setMargins(0,dp(25),0,dp(22));
         content.addView(card,p);
+    }
+
+
+    void recentSection() {
+        LinearLayout section = vertical();
+        LinearLayout heading = new LinearLayout(this);
+        heading.setGravity(Gravity.CENTER_VERTICAL);
+
+        TextView title = text("Recently opened",16,fg);
+        title.setTypeface(Typeface.create("sans-serif-medium",Typeface.NORMAL));
+        heading.addView(title,new LinearLayout.LayoutParams(0,-2,1));
+
+        TextView hint = text("YOUR ACTIVITY",9,muted);
+        hint.setLetterSpacing(.12f);
+        heading.addView(hint);
+        section.addView(heading);
+
+        HorizontalScrollView scroll = new HorizontalScrollView(this);
+        scroll.setHorizontalScrollBarEnabled(false);
+        scroll.setClipToPadding(false);
+        recentAppsRow = new LinearLayout(this);
+        recentAppsRow.setGravity(Gravity.CENTER_VERTICAL);
+        scroll.addView(recentAppsRow);
+
+        LinearLayout.LayoutParams sp = new LinearLayout.LayoutParams(-1,-2);
+        sp.setMargins(0,dp(10),0,dp(22));
+        section.addView(scroll,sp);
+        content.addView(section);
+    }
+
+    void renderRecentApps() {
+        if (recentAppsRow == null) return;
+        recentAppsRow.removeAllViews();
+
+        android.content.SharedPreferences prefs =
+            getSharedPreferences("suzo_settings",0);
+        String saved = prefs.getString("recent_apps","");
+        ArrayList<String> recent = new ArrayList<>();
+        if (saved.length() > 0)
+            recent.addAll(Arrays.asList(saved.split("\\|")));
+
+        int shown = 0;
+        for (String pkg : recent) {
+            if (shown >= 5) break;
+            ResolveInfo match = null;
+            for (ResolveInfo app : apps) {
+                if (app.activityInfo.packageName.equals(pkg)) {
+                    match = app;
+                    break;
+                }
+            }
+            if (match == null) continue;
+
+            final ResolveInfo app = match;
+            LinearLayout tile = vertical();
+            tile.setGravity(Gravity.CENTER);
+            tile.setPadding(dp(12),dp(10),dp(12),dp(9));
+            tile.setBackground(shape(
+                theme == ThemeEngine.Theme.CLASSIC ? 0xFFF9F9FC : 0x18FFFFFF,
+                19,
+                theme == ThemeEngine.Theme.CLASSIC ? 0xFFE0E0E8 : 0x22FFFFFF));
+
+            ImageView image = new ImageView(this);
+            try { image.setImageDrawable(loadPackIcon(app)); }
+            catch(Exception ignored) { image.setImageDrawable(app.loadIcon(pm)); }
+            image.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            applyIconAppearance(image);
+            tile.addView(image,new LinearLayout.LayoutParams(dp(37),dp(37)));
+
+            TextView name = text(app.loadLabel(pm).toString(),10,fg);
+            name.setGravity(Gravity.CENTER);
+            name.setMaxLines(1);
+            name.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            LinearLayout.LayoutParams np = new LinearLayout.LayoutParams(dp(66),-2);
+            np.setMargins(0,dp(6),0,0);
+            tile.addView(name,np);
+
+            tile.setOnClickListener(v -> launchApp(app));
+            tile.setOnLongClickListener(v -> {
+                showAppOptions(app);
+                return true;
+            });
+            LinearLayout.LayoutParams tp = new LinearLayout.LayoutParams(-2,-2);
+            tp.setMargins(0,0,dp(9),0);
+            recentAppsRow.addView(tile,tp);
+            shown++;
+        }
+
+        if (shown == 0) {
+            TextView empty = text("Your frequently used apps will appear here",11,muted);
+            empty.setGravity(Gravity.CENTER);
+            empty.setPadding(dp(14),dp(12),dp(14),dp(12));
+            recentAppsRow.addView(empty);
+        }
+    }
+
+    void rememberApp(String pkg) {
+        if (pkg == null || pkg.length() == 0) return;
+        android.content.SharedPreferences prefs =
+            getSharedPreferences("suzo_settings",0);
+        ArrayList<String> recent = new ArrayList<>();
+        String saved = prefs.getString("recent_apps","");
+        if (saved.length() > 0)
+            recent.addAll(Arrays.asList(saved.split("\\|")));
+        recent.remove(pkg);
+        recent.add(0,pkg);
+        while (recent.size() > 5) recent.remove(recent.size()-1);
+        prefs.edit().putString("recent_apps",joinPackages(recent)).apply();
+    }
+
+    void launchApp(ResolveInfo app) {
+        try {
+            Intent launch = pm.getLaunchIntentForPackage(app.activityInfo.packageName);
+            if (launch != null) {
+                rememberApp(app.activityInfo.packageName);
+                startActivity(launch);
+            }
+        } catch(Exception ignored) {}
     }
 
     void search() {
@@ -494,12 +614,7 @@ public class MainActivity extends Activity {
             lp.setMargins(0,dp(7),0,0);
             if (showLabels) item.addView(label,lp);
 
-            item.setOnClickListener(v -> {
-                try {
-                    Intent launch = pm.getLaunchIntentForPackage(app.activityInfo.packageName);
-                    if (launch != null) startActivity(launch);
-                } catch(Exception ignored) {}
-            });
+            item.setOnClickListener(v -> launchApp(app));
             item.setOnLongClickListener(v -> {
                 showAppOptions(app);
                 return true;
@@ -526,9 +641,15 @@ public class MainActivity extends Activity {
     }
 
     void applyIconAppearance(ImageView image) {
-        if (iconAppearance == 1) image.setColorFilter(Color.BLACK, android.graphics.PorterDuff.Mode.SRC_IN);
-        else if (iconAppearance == 2) image.setColorFilter(Color.WHITE, android.graphics.PorterDuff.Mode.SRC_IN);
-        else image.clearColorFilter();
+        if (iconAppearance == 1) {
+            int tint = theme == ThemeEngine.Theme.CLASSIC ? 0xFF202027 : 0xFFF2F1FA;
+            image.setColorFilter(tint, android.graphics.PorterDuff.Mode.SRC_IN);
+        } else if (iconAppearance == 2) {
+            int tint = theme == ThemeEngine.Theme.CLASSIC ? 0xFF6654B5 : Color.WHITE;
+            image.setColorFilter(tint, android.graphics.PorterDuff.Mode.SRC_IN);
+        } else {
+            image.clearColorFilter();
+        }
     }
 
     void dock() {
@@ -594,6 +715,7 @@ public class MainActivity extends Activity {
             FrameLayout.LayoutParams ip = new FrameLayout.LayoutParams(dp(42),dp(42),Gravity.CENTER);
             cell.addView(image,ip);
             cell.setOnClickListener(v -> {
+                rememberApp(pkg);
                 Intent launch = pm.getLaunchIntentForPackage(pkg);
                 if (launch!=null) startActivity(launch);
             });
@@ -682,7 +804,11 @@ public class MainActivity extends Activity {
 
         if (settingsSnapshot != null && !settingsSnapshot.equals(current)) {
             recreate();
+            return;
         }
+        loadApps();
+        renderRecentApps();
+        showApps(searchInput == null ? "" : searchInput.getText().toString());
     }
 
     @Override protected void onDestroy() {
