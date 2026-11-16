@@ -481,9 +481,18 @@ public class MainActivity extends Activity {
         Intent i = new Intent(Intent.ACTION_MAIN);
         i.addCategory(Intent.CATEGORY_LAUNCHER);
         List<ResolveInfo> list = pm.queryIntentActivities(i,0);
-        Collections.sort(list,(a,b) ->
+        // A package can expose more than one launcher activity. Show one app tile
+        // per installed package to keep the app library clean and predictable.
+        LinkedHashMap<String,ResolveInfo> unique = new LinkedHashMap<>();
+        for (ResolveInfo item : list) {
+            if (item.activityInfo == null || item.activityInfo.packageName == null) continue;
+            String pkg = item.activityInfo.packageName;
+            if (!unique.containsKey(pkg)) unique.put(pkg,item);
+        }
+        ArrayList<ResolveInfo> clean = new ArrayList<>(unique.values());
+        Collections.sort(clean,(a,b) ->
             a.loadLabel(pm).toString().compareToIgnoreCase(b.loadLabel(pm).toString()));
-        apps.addAll(list);
+        apps.addAll(clean);
     }
 
 
