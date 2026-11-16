@@ -659,9 +659,43 @@ public class MainActivity extends Activity {
 
         if (visible.isEmpty()) {
             if (pageIndicator != null) pageIndicator.setText("1 / 1");
-            TextView empty = text("No applications found",13,muted);
+            LinearLayout emptyState = vertical();
+            emptyState.setGravity(Gravity.CENTER);
+            emptyState.setPadding(dp(18),dp(28),dp(18),dp(28));
+
+            TextView symbol = text(filter.length() == 0 ? "▦" : "⌕",34,muted);
+            symbol.setGravity(Gravity.CENTER);
+            emptyState.addView(symbol);
+
+            TextView empty = text(filter.length() == 0
+                ? "No applications available"
+                : "No apps match \"" + filter + "\".",14,fg);
             empty.setGravity(Gravity.CENTER);
-            appsGrid.addView(empty);
+            empty.setTypeface(Typeface.create("sans-serif-medium",Typeface.NORMAL));
+            LinearLayout.LayoutParams ep = new LinearLayout.LayoutParams(-1,-2);
+            ep.setMargins(0,dp(8),0,dp(4));
+            emptyState.addView(empty,ep);
+
+            TextView hint = text(filter.length() == 0
+                ? "Installed apps with a launcher icon will appear here."
+                : "Try another name or clear your search.",11,muted);
+            hint.setGravity(Gravity.CENTER);
+            emptyState.addView(hint);
+
+            if (filter.length() > 0) {
+                TextView reset = text("CLEAR SEARCH",11,Color.WHITE);
+                reset.setGravity(Gravity.CENTER);
+                reset.setTypeface(Typeface.DEFAULT,Typeface.BOLD);
+                reset.setPadding(dp(18),dp(10),dp(18),dp(10));
+                reset.setBackground(shape(0xFF6654B5,16,0));
+                LinearLayout.LayoutParams rp = new LinearLayout.LayoutParams(-2,-2);
+                rp.setMargins(0,dp(14),0,0);
+                emptyState.addView(reset,rp);
+                reset.setOnClickListener(v -> {
+                    if (searchInput != null) searchInput.setText("");
+                });
+            }
+            appsGrid.addView(emptyState,new LinearLayout.LayoutParams(-1,-2));
         }
     }
 
