@@ -306,6 +306,7 @@ public class MainActivity extends Activity {
             try { image.setImageDrawable(loadPackIcon(app)); }
             catch(Exception ignored) { image.setImageDrawable(app.loadIcon(pm)); }
             image.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            image.setContentDescription(app.loadLabel(pm).toString());
             applyIconAppearance(image);
             tile.addView(image,new LinearLayout.LayoutParams(dp(37),dp(37)));
 
@@ -612,6 +613,7 @@ public class MainActivity extends Activity {
             ImageView icon = new ImageView(this);
             try { icon.setImageDrawable(loadPackIcon(app)); } catch(Exception ignored) { icon.setImageDrawable(app.loadIcon(pm)); }
             icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            icon.setContentDescription(app.loadLabel(pm).toString());
             icon.setBackgroundColor(Color.TRANSPARENT);
             applyIconAppearance(icon);
             icon.setClipToOutline(true);
@@ -770,6 +772,8 @@ public class MainActivity extends Activity {
             try { image.setImageDrawable(loadPackIconForPackage(pkg)); }
             catch(Exception ignored) {}
             image.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            try { image.setContentDescription(pm.getApplicationLabel(pm.getApplicationInfo(pkg,0)).toString()); }
+            catch(Exception ignored) { image.setContentDescription("Dock app"); }
             applyIconAppearance(image);
             FrameLayout.LayoutParams ip = new FrameLayout.LayoutParams(dp(42),dp(42),Gravity.CENTER);
             cell.addView(image,ip);
