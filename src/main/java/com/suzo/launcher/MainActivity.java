@@ -831,18 +831,28 @@ public class MainActivity extends Activity {
     }
 
     void removeFromDock(String pkg) {
-        android.content.SharedPreferences prefs = getSharedPreferences("suzo_settings",0);
-        ArrayList<String> items = new ArrayList<>();
-        String saved = prefs.getString("dock_apps","");
-        if (saved.length() > 0) items.addAll(Arrays.asList(saved.split("\\|")));
-        items.remove(pkg);
-        ArrayList<String> hiddenItems = new ArrayList<>();
-        String hidden = prefs.getString("dock_hidden","");
-        if (hidden.length() > 0) hiddenItems.addAll(Arrays.asList(hidden.split("\\|")));
-        if (!hiddenItems.contains(pkg)) hiddenItems.add(pkg);
-        prefs.edit().putString("dock_apps",joinPackages(items))
-            .putString("dock_hidden",joinPackages(hiddenItems)).apply();
-        recreate();
+        String appName = pkg;
+        try { appName = pm.getApplicationLabel(pm.getApplicationInfo(pkg,0)).toString(); }
+        catch(Exception ignored) {}
+
+        new AlertDialog.Builder(this)
+            .setTitle("Remove from dock?")
+            .setMessage("Remove " + appName + " from your dock? The app will remain installed and available in Your Applications.")
+            .setNegativeButton("CANCEL",null)
+            .setPositiveButton("REMOVE",(dialog,which) -> {
+                android.content.SharedPreferences prefs = getSharedPreferences("suzo_settings",0);
+                ArrayList<String> items = new ArrayList<>();
+                String saved = prefs.getString("dock_apps","");
+                if (saved.length() > 0) items.addAll(Arrays.asList(saved.split("\\|")));
+                items.remove(pkg);
+                ArrayList<String> hiddenItems = new ArrayList<>();
+                String hidden = prefs.getString("dock_hidden","");
+                if (hidden.length() > 0) hiddenItems.addAll(Arrays.asList(hidden.split("\\|")));
+                if (!hiddenItems.contains(pkg)) hiddenItems.add(pkg);
+                prefs.edit().putString("dock_apps",joinPackages(items))
+                    .putString("dock_hidden",joinPackages(hiddenItems)).apply();
+                recreate();
+            }).show();
     }
 
     String joinPackages(ArrayList<String> packages) {
