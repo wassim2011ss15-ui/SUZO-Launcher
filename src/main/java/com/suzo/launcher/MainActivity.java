@@ -30,7 +30,7 @@ public class MainActivity extends Activity {
     int appPage = 0;
     int appPageCount = 1;
     String currentFilter = "";
-    TextView pageIndicator;
+    TextView pageIndicator, appCount;
     LinearLayout categoryBar;
     int selectedCategory = -1;
     String settingsSnapshot;
@@ -375,9 +375,16 @@ public class MainActivity extends Activity {
         searchInput.setTextColor(fg);
         searchInput.setHintTextColor(muted);
         searchInput.setHint("Search applications");
+        searchInput.setImeOptions(android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH);
         searchInput.setBackgroundColor(Color.TRANSPARENT);
         searchInput.setPadding(dp(10),dp(15),0,dp(15));
         box.addView(searchInput,new LinearLayout.LayoutParams(0,-2,1));
+
+        TextView clear = text("×",23,muted);
+        clear.setGravity(Gravity.CENTER);
+        clear.setVisibility(View.GONE);
+        box.addView(clear,new LinearLayout.LayoutParams(dp(34),dp(42)));
+        clear.setOnClickListener(v -> searchInput.setText(""));
 
         LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1,-2);
         p.setMargins(0,0,0,dp(25));
@@ -386,6 +393,7 @@ public class MainActivity extends Activity {
         searchInput.addTextChangedListener(new TextWatcher() {
             public void beforeTextChanged(CharSequence s,int a,int c,int f) {}
             public void onTextChanged(CharSequence s,int a,int before,int count) {
+                clear.setVisibility(s.length() == 0 ? View.GONE : View.VISIBLE);
                 appPage = 0;
                 showApps(s.toString());
             }
@@ -400,6 +408,13 @@ public class MainActivity extends Activity {
         TextView title = text("Your Applications",19,fg);
         title.setTypeface(null,Typeface.BOLD);
         header.addView(title,new LinearLayout.LayoutParams(0,-2,1));
+        appCount = text("0 APPS",9,muted);
+        appCount.setGravity(Gravity.CENTER);
+        appCount.setPadding(dp(9),dp(6),dp(9),dp(6));
+        appCount.setBackground(shape(theme == ThemeEngine.Theme.CLASSIC ? 0xFFE7E7EF : 0x22FFFFFF,12,0));
+        LinearLayout.LayoutParams countParams = new LinearLayout.LayoutParams(-2,-2);
+        countParams.setMargins(0,0,dp(8),0);
+        header.addView(appCount,countParams);
         LinearLayout pages = new LinearLayout(this);
         pages.setGravity(Gravity.CENTER);
         TextView previous = text("‹",24,fg);
@@ -569,6 +584,7 @@ public class MainActivity extends Activity {
                 visible.add(a);
         }
 
+        if (appCount != null) appCount.setText(visible.size() + (visible.size() == 1 ? " APP" : " APPS"));
         int columns = Math.max(3, Math.min(5, gridColumns));
         int pageSize = columns * 4;
         appPageCount = Math.max(1, (int)Math.ceil(visible.size() / (double)pageSize));
